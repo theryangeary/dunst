@@ -596,10 +596,6 @@ gboolean x_mainloop_fd_dispatch(GSource * source, GSourceFunc callback,
                 case SelectionNotify:
                         if (ev.xselection.property == xctx.utf8)
                                 break;
-                case VisibilityNotify:
-                        if (ev.xvisibility.state != VisibilityUnobscured)
-                                XRaiseWindow(xctx.dpy, xctx.win);
-                        break;
                 case ButtonPress:
                         if (ev.xbutton.window == xctx.win) {
                                 x_handle_click(ev);
@@ -920,6 +916,12 @@ static void x_win_setup(void)
                           CopyFromParent, DefaultVisual(xctx.dpy,
                                                         DefaultScreen(xctx.dpy)),
                           CWOverrideRedirect | CWBackPixmap | CWEventMask, &wa);
+
+        Atom _NET_WM_STATE = XInternAtom(xctx.dpy, "_NET_WM_STATE", false);
+        Atom _NET_WM_STATE_ABOVE = XInternAtom(xctx.dpy, "_NET_WM_STATE_ABOVE", false);
+        XChangeProperty(xctx.dpy, xctx.win, _NET_WM_STATE, XA_ATOM, 32,
+                        PropModeReplace, (unsigned char *)&_NET_WM_STATE_ABOVE, 1L);
+
 
         x_set_win_type(xctx.win);
         settings.transparency =
