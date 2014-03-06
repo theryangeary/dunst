@@ -105,7 +105,7 @@ void update_lists()
 
         if (pause_display) {
                 while (displayed->length > 0) {
-                        g_queue_insert_sorted(queue, g_queue_pop_head(displayed),
+                        g_queue_insert_sorted(queue, g_queue_pop_head(queue),
                                               notification_cmp_data, NULL);
                 }
                 return;
