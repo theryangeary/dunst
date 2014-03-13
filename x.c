@@ -48,11 +48,10 @@ cairo_ctx_t cairo_ctx;
 
 static color_t frame_color;
 
-/* FIXME refactor setup teardown handlers into one setup and one teardown */
-static void x_follow_setup_error_handler(void);
-static int x_follow_tear_down_error_handler(void);
-static void x_shortcut_setup_error_handler(void);
-static int x_shortcut_tear_down_error_handler(void);
+static void x_setup_error_handler(int (*handler)(Display *dpy, XErrorEvent *e), bool *state_var);
+static int x_tear_down_error_handler(bool *state_var);
+static int FollowXErrorHandler(Display * display, XErrorEvent * e);
+static int GrabXErrorHandler(Display * display, XErrorEvent * e);
 static void x_win_move(int width, int height);
 static void setopacity(Window win, unsigned long opacity);
 static void x_handle_click(XEvent ev);
@@ -800,7 +799,7 @@ static Window get_focused_window(void)
 static int select_screen(XineramaScreenInfo * info, int info_len)
 {
         int ret = 0;
-        x_follow_setup_error_handler();
+        x_setup_error_handler(FollowXErrorHandler, &dunst_follow_errored);
         if (settings.f_mode == FOLLOW_NONE) {
                  ret = settings.monitor >=
                     0 ? settings.monitor : XDefaultScreen(xctx.dpy);
@@ -854,7 +853,7 @@ static int select_screen(XineramaScreenInfo * info, int info_len)
                 goto sc_cleanup;
         }
 sc_cleanup:
-        x_follow_tear_down_error_handler();
+        x_tear_down_error_handler(&dunst_follow_errored);
         return ret;
 }
 #endif
@@ -1037,10 +1036,10 @@ void x_win_show(void)
         x_shortcut_grab(&settings.close_all_ks);
         x_shortcut_grab(&settings.context_ks);
 
-        x_shortcut_setup_error_handler();
+        x_setup_error_handler(GrabXErrorHandler, &dunst_grab_errored);
         XGrabButton(xctx.dpy, AnyButton, AnyModifier, xctx.win, false,
                     BUTTONMASK, GrabModeAsync, GrabModeSync, None, None);
-        if (x_shortcut_tear_down_error_handler()) {
+        if (x_tear_down_error_handler(&dunst_grab_errored)) {
                 fprintf(stderr, "Unable to grab mouse button(s)\n");
         }
 
@@ -1087,71 +1086,50 @@ KeySym x_shortcut_string_to_mask(const char *str)
 
 }
 
+static int x_generic_error_handler(Display *display, XErrorEvent *e, bool *state_var)
+{
+        *state_var = false;
+        char err_buf[BUFSIZ];
+        XGetErrorText(display, e->error_code, err_buf, BUFSIZ);
+        fputs(err_buf, stderr);
+        fputs("\n", stderr);
+
+        return 0;
+}
+
         /*
          * Error handler for grabbing mouse and keyboard errors.
          */
 static int GrabXErrorHandler(Display * display, XErrorEvent * e)
 {
-        dunst_grab_errored = true;
-        char err_buf[BUFSIZ];
-        XGetErrorText(display, e->error_code, err_buf, BUFSIZ);
-        fputs(err_buf, stderr);
-        fputs("\n", stderr);
-
-        if (e->error_code != BadAccess) {
-                exit(EXIT_FAILURE);
-        }
-
-        return 0;
+        return x_generic_error_handler(display, e, &dunst_grab_errored);
 }
 
 static int FollowXErrorHandler(Display * display, XErrorEvent * e)
 {
-        dunst_follow_errored = true;
-        char err_buf[BUFSIZ];
-        XGetErrorText(display, e->error_code, err_buf, BUFSIZ);
-        fputs(err_buf, stderr);
-        fputs("\n", stderr);
-
-        return 0;
+        return x_generic_error_handler(display, e, &dunst_follow_errored);
 }
 
         /*
          * Setup the Error handler.
          */
-static void x_shortcut_setup_error_handler(void)
+static void x_setup_error_handler(int (*handler)(Display *dpy, XErrorEvent *e), bool *state_var)
 {
-        dunst_grab_errored = false;
+        *state_var = false;
 
         XFlush(xctx.dpy);
-        XSetErrorHandler(GrabXErrorHandler);
-}
-
-static void x_follow_setup_error_handler(void)
-{
-        dunst_follow_errored = false;
-
-        XFlush(xctx.dpy);
-        XSetErrorHandler(FollowXErrorHandler);
+        XSetErrorHandler(handler);
 }
 
         /*
          * Tear down the Error handler.
          */
-static int x_shortcut_tear_down_error_handler(void)
+static int x_tear_down_error_handler(bool *state_var)
 {
         XFlush(xctx.dpy);
         XSync(xctx.dpy, false);
         XSetErrorHandler(NULL);
-        return dunst_grab_errored;
-}
-
-static int x_follow_tear_down_error_handler(void)
-{
-        XFlush(xctx.dpy);
-        XSync(xctx.dpy, false);
-        XSetErrorHandler(NULL);
-        return dunst_follow_errored;
+        return *state_var;
 }
 
         /*
@@ -1164,7 +1142,7 @@ int x_shortcut_grab(keyboard_shortcut * ks)
         Window root;
         root = RootWindow(xctx.dpy, DefaultScreen(xctx.dpy));
 
-        x_shortcut_setup_error_handler();
+        x_setup_error_handler(GrabXErrorHandler, &dunst_grab_errored);
 
         if (ks->is_valid) {
                 XGrabKey(xctx.dpy, ks->code, ks->mask, root,
@@ -1173,7 +1151,7 @@ int x_shortcut_grab(keyboard_shortcut * ks)
                          true, GrabModeAsync, GrabModeAsync);
         }
 
-        if (x_shortcut_tear_down_error_handler()) {
+        if (x_tear_down_error_handler(&dunst_grab_errored)) {
                 fprintf(stderr, "Unable to grab key \"%s\"\n", ks->str);
                 ks->is_valid = false;
                 return 1;

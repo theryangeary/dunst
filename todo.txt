@@ -1,0 +1,4 @@
+* reintroduce error messages for keygrab errors (unable to grab ctrl+x)
+* don't spam errormessages
+
+
