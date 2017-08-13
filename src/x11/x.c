@@ -949,6 +949,25 @@ void x_free(void)
                 XCloseDisplay(xctx.dpy);
 }
 
+void x_parse_geometry(struct geometry *geom_ret)
+{
+        XParseGeometry(settings.geom,
+                       &(geom_ret->x),
+                       &(geom_ret->y),
+                       (unsigned int *) &(geom_ret->width),
+                       (unsigned int *) &(geom_ret->height)
+                       );
+
+        geom_ret->dynamic_width = have_dynamic_width();
+
+        if (settings.geom[0] == '-') {
+                geom_ret->negative_width = true;
+                settings.geom++;
+        } else {
+                geom_ret->negative_width = false;
+        }
+}
+
 /*
  * Setup X11 stuff
  */

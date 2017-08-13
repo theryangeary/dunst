@@ -8,6 +8,8 @@
 #include <glib.h>
 #include <stdbool.h>
 
+#include "src/draw.h"
+
 #include "screen.h"
 
 #define BUTTONMASK              (ButtonPressMask|ButtonReleaseMask)
@@ -57,6 +59,7 @@ KeySym x_shortcut_string_to_mask(const char *str);
 bool x_is_idle(void);
 void x_setup(void);
 void x_free(void);
+void x_parse_geometry(struct geometry *geom_ret);
 
 gboolean x_mainloop_fd_dispatch(GSource *source, GSourceFunc callback,
                                 gpointer user_data);

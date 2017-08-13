@@ -15,6 +15,7 @@
 #include <time.h>
 
 #include "dbus.h"
+#include "draw.h"
 #include "menu.h"
 #include "notification.h"
 #include "option_parser.h"
@@ -328,7 +329,7 @@ int dunst_main(int argc, char *argv[])
 
         int owner_id = initdbus();
 
-        x_setup();
+        draw_setup();
 
         if (settings.startup_notification) {
                 notification *n = notification_create();
