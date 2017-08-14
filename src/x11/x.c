@@ -139,6 +139,13 @@ static color_t x_get_separator_color(colored_layout *cl, colored_layout *cl_next
         }
 }
 
+cairo_surface_t* x_cairo_create_surface()
+{
+        return cairo_xlib_surface_create(xctx.dpy,
+                        xctx.win, DefaultVisual(xctx.dpy, 0), WIDTH, HEIGHT);
+
+}
+
 static void x_cairo_setup(void)
 {
         cairo_ctx.surface = cairo_xlib_surface_create(xctx.dpy,

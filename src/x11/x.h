@@ -2,6 +2,7 @@
 #ifndef DUNST_X_H
 #define DUNST_X_H
 
+#include <cairo.h>
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/scrnsaver.h>
@@ -60,6 +61,7 @@ bool x_is_idle(void);
 void x_setup(void);
 void x_free(void);
 void x_parse_geometry(struct geometry *geom_ret);
+cairo_surface_t* x_cairo_create_surface();
 
 gboolean x_mainloop_fd_dispatch(GSource *source, GSourceFunc callback,
                                 gpointer user_data);

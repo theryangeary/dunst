@@ -23,6 +23,10 @@
 #include "src/settings.h"
 #include "src/utils.h"
 
+cairo_surface_t *cairo_surface;
+cairo_t *cairo_context;
+PangoFontDescription *pango_fdesc;
+
 const char *color_strings[3][3];
 
 struct geometry geometry;
@@ -53,6 +57,9 @@ void draw_setup()
                 color_strings[ColFrame][CRIT] = settings.frame_color;
 
         x_setup();
+        cairo_surface = x_cairo_create_surface();
+        cairo_context = cairo_create(cairo_surface);
+        pango_fdesc = pango_font_description_from_string(settings.font);
 }
 
 /* vim: set tabstop=8 shiftwidth=8 expandtab textwidth=0: */
