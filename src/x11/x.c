@@ -8,7 +8,6 @@
 #include <X11/Xutil.h>
 #include <cairo.h>
 #include <cairo-xlib.h>
-#include <gdk/gdk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <glib-object.h>
 #include <locale.h>
@@ -284,21 +283,29 @@ static dimension_t calculate_dimensions(GSList *layouts)
         return dim;
 }
 
-static cairo_surface_t *gdk_pixbuf_to_cairo_surface(const GdkPixbuf *pixbuf)
+struct buffer {
+        char *buf;
+        gsize bufsize;
+};
+
+static cairo_status_t read_from_buf(void *closure, unsigned char *data, unsigned int size)
+{
+        struct buffer *buf = (struct buffer *)closure;
+        unsigned int cpy = MIN(size, buf->bufsize);
+        memcpy(data, buf->buf, cpy);
+        buf->buf += cpy;
+        buf->bufsize -= cpy;
+        return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_surface_t *gdk_pixbuf_to_cairo_surface(GdkPixbuf *pixbuf)
 {
         cairo_surface_t *icon_surface = NULL;
-        cairo_t *cr;
-        cairo_format_t format;
-        double width, height;
+        struct buffer buffer;
 
-        format = gdk_pixbuf_get_has_alpha(pixbuf) ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
-        width = gdk_pixbuf_get_width(pixbuf);
-        height = gdk_pixbuf_get_height(pixbuf);
-        icon_surface = cairo_image_surface_create(format, width, height);
-        cr = cairo_create(icon_surface);
-        gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
-        cairo_paint(cr);
-        cairo_destroy(cr);
+        gdk_pixbuf_save_to_buffer(pixbuf, &buffer.buf, &buffer.bufsize, "png", NULL, NULL);
+        icon_surface = cairo_image_surface_create_from_png_stream(read_from_buf, &buffer);
+
         return icon_surface;
 }
 
