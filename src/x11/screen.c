@@ -32,11 +32,11 @@ static int x_follow_tear_down_error_handler(void);
 static int FollowXErrorHandler(Display *display, XErrorEvent *e);
 static Window get_focused_window(void);
 
-static double get_xft_dpi_value()
+static double get_xft_dpi_value(bool force_update)
 {
         static double dpi = -1;
         //Only run this once, we don't expect dpi changes during runtime
-        if (dpi <= -1) {
+        if (dpi <= -1 || force_update) {
                 XrmInitialize();
                 char *xRMS = XResourceManagerString(xctx.dpy);
 
@@ -123,8 +123,10 @@ static int autodetect_dpi(screen_info *scr)
 
 void screen_check_event(XEvent event)
 {
-        if (event.type == randr_event_base + RRScreenChangeNotify)
+        if (event.type == randr_event_base + RRScreenChangeNotify) {
                 randr_update();
+                get_xft_dpi_value(true);
+        }
 }
 
 void xinerama_update()
@@ -242,7 +244,7 @@ double get_dpi_for_screen(screen_info *scr)
         if ((!settings.force_xinerama && settings.per_monitor_dpi &&
                 (dpi = autodetect_dpi(scr))))
                 return dpi;
-        else if ((dpi = get_xft_dpi_value()))
+        else if ((dpi = get_xft_dpi_value(false)))
                 return dpi;
         else
                 return 96;
