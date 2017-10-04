@@ -488,15 +488,15 @@ int notification_init(notification *n, int id)
         n->urgency = n->urgency > CRIT ? CRIT : n->urgency;
 
         if (!n->color_strings[ColFG]) {
-                n->color_strings[ColFG] = xctx.color_strings[ColFG][n->urgency];
+                n->color_strings[ColFG] = color_strings[ColFG][n->urgency];
         }
 
         if (!n->color_strings[ColBG]) {
-                n->color_strings[ColBG] = xctx.color_strings[ColBG][n->urgency];
+                n->color_strings[ColBG] = color_strings[ColBG][n->urgency];
         }
 
         if (!n->color_strings[ColFrame]) {
-                n->color_strings[ColFrame] = xctx.color_strings[ColFrame][n->urgency];
+                n->color_strings[ColFrame] = color_strings[ColFrame][n->urgency];
         }
 
         n->timeout =

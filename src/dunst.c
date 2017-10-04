@@ -101,14 +101,14 @@ void update_lists()
                 return;
         }
 
-        if (xctx.geometry.h == 0) {
+        if (draw_get_geometry()->height == 0) {
                 limit = 0;
-        } else if (xctx.geometry.h == 1) {
+        } else if (draw_get_geometry()->height == 1) {
                 limit = 1;
         } else if (settings.indicate_hidden) {
-                limit = xctx.geometry.h - 1;
+                limit = draw_get_geometry()->height - 1;
         } else {
-                limit = xctx.geometry.h;
+                limit = draw_get_geometry()->height;
         }
 
         /* move notifications from queue to displayed */
@@ -241,7 +241,7 @@ gboolean run(void *data)
         }
 
         if (xctx.visible) {
-                x_win_draw();
+                draw();
         }
 
         if (xctx.visible) {
@@ -299,7 +299,7 @@ static void teardown(void)
         g_queue_free_full(displayed, teardown_notification);
         g_queue_free_full(queue, teardown_notification);
 
-        x_free();
+        draw_free();
 }
 
 int dunst_main(int argc, char *argv[])

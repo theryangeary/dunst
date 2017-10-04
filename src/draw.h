@@ -16,6 +16,18 @@ struct geometry {
         bool negative_width;
 };
 
+typedef struct _color_t {
+        double r;
+        double g;
+        double b;
+} color_t;
+
 void draw_setup();
+void draw_free();
+void draw();
+
+const struct geometry *draw_get_geometry();
+
+extern const char *color_strings[3][3];
 #endif
 /* vim: set tabstop=8 shiftwidth=8 expandtab textwidth=0: */
